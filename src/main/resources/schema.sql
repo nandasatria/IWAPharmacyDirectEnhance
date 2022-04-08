@@ -9,6 +9,7 @@
 drop table authorities if exists cascade;
 drop table users if exists cascade;
 drop table user_authorities if exists cascade;
+drop table verifications if exists;
 drop table products if exists cascade;
 drop table messages if exists cascade;
 drop table orders if exists cascade;
