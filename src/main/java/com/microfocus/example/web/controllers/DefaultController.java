@@ -1,7 +1,7 @@
 /*
         Insecure Web App (IWA)
 
-        Copyright (C) 2020 Micro Focus or one of its affiliates
+        Copyright (C) 2022 Micro Focus or one of its affiliates
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -19,39 +19,36 @@
 
 package com.microfocus.example.web.controllers;
 
-import java.security.Principal;
-import java.util.Currency;
-import java.util.Locale;
-
 import com.microfocus.example.config.LocaleConfiguration;
-import com.microfocus.example.entity.Order;
-import com.microfocus.example.exception.UserNotFoundException;
-import com.microfocus.example.web.form.OrderForm;
-import com.microfocus.example.web.form.RegisterUserForm;
+import com.microfocus.example.config.handlers.CustomAuthenticationSuccessHandler;
+import com.microfocus.example.entity.CustomUserDetails;
+import com.microfocus.example.utils.JwtUtils;
+import com.microfocus.example.utils.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import com.microfocus.example.entity.CustomUserDetails;
-import com.microfocus.example.utils.WebUtils;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.security.Principal;
+import java.util.Currency;
+import java.util.Locale;
 
 /**
- * Default (root) controllers
+ * Default (root) controller
  *
  * @author Kevin A. Lee
  */
-@SessionAttributes({"currentUser", "currentUserId"})
 @Controller
+@Scope("session")
+//@SessionAttributes({"currentUser", "currentUserId", "loginReferer"})
 public class DefaultController {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultController.class);
@@ -61,6 +58,9 @@ public class DefaultController {
 
     @Autowired
     LocaleConfiguration localeConfiguration;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @GetMapping("/")
     public String index(Model model, Principal principal) {
@@ -73,9 +73,24 @@ public class DefaultController {
 
     @GetMapping("/login")
     public String login(HttpServletRequest request, Model model, Principal principal) {
-        String referer = request.getHeader("Referer");
-        model.addAttribute("referer", referer);
+        HttpSession session = request.getSession(false);
+        String referer = (String) request.getHeader("referer");
+        session.setAttribute("loginReferer", referer);
         return "login";
+    }
+
+    @GetMapping("/verify")
+    public String verify(HttpServletRequest request, Model model, Principal principal) {
+        return "verify";
+    }
+
+    @PostMapping("/verify")
+    public String verify(HttpServletRequest request, HttpServletResponse response,
+                         @RequestParam("otp") String otp, Model model, Principal principal) {
+        Authentication authentication = (Authentication) principal;
+        String jwtToken = jwtUtils.generateAndSetSession(request, response, authentication);
+        String targetUrl = CustomAuthenticationSuccessHandler.getTargetUrl(request, response, authentication);
+        return "redirect:"+targetUrl;
     }
 
     @GetMapping("/services")

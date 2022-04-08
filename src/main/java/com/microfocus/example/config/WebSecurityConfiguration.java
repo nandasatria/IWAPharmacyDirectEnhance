@@ -1,7 +1,7 @@
 /*
         Insecure Web App (IWA)
 
-        Copyright (C) 2020 Micro Focus or one of its affiliates
+        Copyright (C) 2022 Micro Focus or one of its affiliates
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -178,14 +178,15 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                     .exceptionHandling()
                     .accessDeniedPage("/access-denied");
 
-            httpSecurity.authorizeRequests().and().formLogin()
-                    .loginProcessingUrl("/j_spring_security_check")
-                    .successHandler(CustomAuthenticationSuccessHandler())
-                    .loginPage("/login")
-                    .failureUrl("/login?error=true")
-                    .usernameParameter("username")
-                    .passwordParameter("password")
-                    .permitAll();
+            httpSecurity.authorizeRequests().and()
+                    .formLogin()
+                        .loginProcessingUrl("/j_spring_security_check")
+                        .successHandler(CustomAuthenticationSuccessHandler())
+                        .loginPage("/login")
+                        .failureUrl("/login?error=true")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
+                        .permitAll();
 
             httpSecurity.authorizeRequests().and().logout()
                     .invalidateHttpSession(true)
@@ -215,7 +216,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
         @Bean
         public AuthenticationSuccessHandler CustomAuthenticationSuccessHandler(){
-            return new UrlAuthenticationSuccessHandler();
+            return new CustomAuthenticationSuccessHandler();
         }
 
         @Bean
