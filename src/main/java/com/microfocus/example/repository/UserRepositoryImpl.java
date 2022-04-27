@@ -1,7 +1,7 @@
 /*
         Insecure Web App (IWA)
 
-        Copyright (C) 2021 Micro Focus or one of its affiliates
+        Copyright (C) 2020-2022 Micro Focus or one of its affiliates
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Optional<User> findUserByUsername(String username) throws UserLockedOutException, UsernameNotFoundException {
+    public Optional<User> authenticateUserByUsername(String username) throws UserLockedOutException, UsernameNotFoundException {
         List<User> users = new ArrayList<>();
 
         Session session = entityManager.unwrap(Session.class);
@@ -125,6 +125,97 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
             }
         });
 
+        Optional<User> optionalUser = Optional.empty();
+        if (!users.isEmpty()) {
+            optionalUser = Optional.of(users.get(0));
+        } else {
+            log.debug("Unable to find username: " + username);
+        }
+        return optionalUser;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Optional<User> authenticateUserByEmail(String email) throws UserLockedOutException, UsernameNotFoundException {
+        List<User> users = new ArrayList<>();
+
+        Session session = entityManager.unwrap(Session.class);
+        Integer authorityCount = session.doReturningWork(new ReturningWork<Integer>() {
+
+            @Override
+            public Integer execute(Connection con) throws SQLException {
+                Integer authorityCount = 0;
+                try {
+                    Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                    ResultSet results = stmt.executeQuery(
+                            "SELECT u.*, a.name as authority " +
+                                    "FROM users u, authorities a INNER JOIN user_authorities ua on a.id = ua.authority_id " +
+                                    "WHERE u.id = ua.user_id AND u.email LIKE '" + email + "'");
+                    if (results.next()) {
+                        log.debug("Found matching user in database for email: " + email);
+                        results.beforeFirst();
+                        User utmp = new User();
+                        Set<Authority> authorities = new HashSet<>();
+                        while (results.next()) {
+                            if (authorityCount == 0) {
+                                utmp = new User(results.getObject("id", UUID.class),
+                                        results.getString("username"),
+                                        results.getString("password"),
+                                        results.getString("first_name"),
+                                        results.getString("last_name"),
+                                        results.getString("email"),
+                                        results.getString("phone"),
+                                        results.getString("address"),
+                                        results.getString("city"),
+                                        results.getString("state"),
+                                        results.getString("zip"),
+                                        results.getString("country"),
+                                        results.getBoolean("enabled")
+                                );
+                                utmp.setCountry(results.getString("country"));
+                                utmp.setAddress(results.getString("address"));
+                                utmp.setState(results.getString("state"));
+                                utmp.setZip(results.getString("zip"));
+                                log.debug("Adding authority " + results.getString("authority") + " for user");
+                                authorities.add(new Authority(AuthorityType.valueOf(results.getString("authority"))));
+                                authorityCount++;
+                            } else {
+                                log.debug("Adding authority " + results.getString("authority") + " for user");
+                                authorities.add(new Authority(AuthorityType.valueOf(results.getString("authority"))));
+                            }
+                        }
+                        if (!authorities.isEmpty()) {
+                            utmp.setAuthorities(authorities);
+                        }
+                        users.add(utmp);
+                    } else {
+                        log.debug("No matching users found");
+                    }
+                } catch (SQLException ex) {
+                    log.error(ex.getLocalizedMessage());
+                }
+                return authorityCount;
+            }
+        });
+
+        Optional<User> optionalUser = Optional.empty();
+        if (!users.isEmpty()) {
+            optionalUser = Optional.of(users.get(0));
+        } else {
+            log.debug("Unable to find user by email: " + email);
+        }
+        return optionalUser;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Optional<User> findUserByUsername(String username) {
+        List<User> users = new ArrayList<>();
+        Query q = entityManager.createQuery(
+                "SELECT u FROM User u WHERE u.username = :username",
+                User.class);
+        q.setParameter("username", username);
+        users = (List<User>) q.getResultList();
         Optional<User> optionalUser = Optional.empty();
         if (!users.isEmpty()) {
             optionalUser = Optional.of(users.get(0));

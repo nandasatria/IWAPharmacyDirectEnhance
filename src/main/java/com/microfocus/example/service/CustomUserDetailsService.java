@@ -1,7 +1,7 @@
 /*
         Insecure Web App (IWA)
 
-        Copyright (C) 2020 Micro Focus or one of its affiliates
+        Copyright (C) 2020-2022 Micro Focus or one of its affiliates
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@ package com.microfocus.example.service;
 
 import com.microfocus.example.entity.CustomUserDetails;
 import com.microfocus.example.entity.User;
-import com.microfocus.example.exception.UserLockedOutException;
-import com.microfocus.example.repository.UserRepositoryCustom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,19 +42,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private static final Logger log = LoggerFactory.getLogger(CustomUserDetailsService.class);
 
     @Autowired
-    private UserRepositoryCustom userRepository;
+    private UserService userService;
 
     @Transactional
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> user = Optional.ofNullable(null);
-        try {
-            user = userRepository.findUserByUsername(username);
-            if (!user.isPresent()) {
-                throw new UsernameNotFoundException("User not found.");
-            }
-        } catch (UserLockedOutException ignored) {
-            // Do something here
+
+        Optional<User> user = userService.findUserByEmail(username);
+        if (!user.isPresent()) user = userService.findUserByUsername(username);
+        if (!user.isPresent()) {
+            throw new UsernameNotFoundException("User not found");
         }
         return new CustomUserDetails(user.get());
     }

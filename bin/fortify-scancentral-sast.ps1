@@ -15,7 +15,7 @@ $ScanCentralCtrlUrl = $EnvSettings['SCANCENTRAL_CTRL_URL']
 $ScanCentralCtrlToken = $EnvSettings['SCANCENTRAL_CTRL_TOKEN'] # ScanCentralCtrlToken
 $ScanCentralPoolId = $EnvSettings['SCANCENTRAL_POOL_ID']
 $ScanCentralEmail = $EnvSettings['SCANCENTRAL_EMAIL']
-$ScanSwitches = "-Dcom.fortify.sca.Phase0HigherOrder.Languages=javascript,typescript -Dcom.fortify.sca.EnableDOMModeling=true -Dcom.fortify.sca.follow.imports=true -Dcom.fortify.sca.exclude.unimported.node.modules=true"
+$ScanSwitches = "-Dcom.fortify.sca.rules.enable_wi_correlation=true -Dcom.fortify.sca.Phase0HigherOrder.Languages=javascript,typescript -Dcom.fortify.sca.EnableDOMModeling=true -Dcom.fortify.sca.follow.imports=true -Dcom.fortify.sca.exclude.unimported.node.modules=true"
 
 # Test we have Fortify installed successfully
 Test-Environment

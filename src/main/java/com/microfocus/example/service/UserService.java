@@ -1,7 +1,7 @@
 /*
         Insecure Web App (IWA)
 
-        Copyright (C) 2021 Micro Focus or one of its affiliates
+        Copyright (C) 2020-2022 Micro Focus or one of its affiliates
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +93,14 @@ public class UserService {
     }
 
     public Optional<User> findUserByEmail(String email) { return userRepository.findUserByEmail(email); }
+
+    public Optional<User> authenticateUserByUsername(String username) throws UserLockedOutException, UsernameNotFoundException {
+        return userRepository.authenticateUserByUsername(username);
+    }
+
+    public Optional<User> authenticateUserByEmail(String email) throws UserLockedOutException, UsernameNotFoundException {
+        return userRepository.authenticateUserByEmail(email);
+    }
 
     public List<User> getAllUsers() {
         return (List<User>) userRepository.findAll();

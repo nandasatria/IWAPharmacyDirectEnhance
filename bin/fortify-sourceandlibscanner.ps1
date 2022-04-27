@@ -14,7 +14,7 @@ $SSCAuthToken = $EnvSettings['SSC_AUTH_TOKEN'] # CIToken
 $NexusIQUrl = $EnvSettings['NEXUS_IQ_URL']
 $NexusIQAuth = $EnvSettings['NEXUS_IQ_AUTH']
 $NexusIQAppId = $EnvSettings['NEXUS_IQ_APP_ID']
-$ScanSwitches = "-Dcom.fortify.sca.Phase0HigherOrder.Languages=javascript,typescript -Dcom.fortify.sca.EnableDOMModeling=true -Dcom.fortify.sca.follow.imports=true -Dcom.fortify.sca.exclude.unimported.node.modules=true"
+$ScanSwitches = "-Dcom.fortify.sca.rules.enable_wi_correlation=true -Dcom.fortify.sca.Phase0HigherOrder.Languages=javascript,typescript -Dcom.fortify.sca.EnableDOMModeling=true -Dcom.fortify.sca.follow.imports=true -Dcom.fortify.sca.exclude.unimported.node.modules=true"
 
 # Test we have Fortify installed successfully
 Test-Environment
